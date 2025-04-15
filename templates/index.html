@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factorio Thruster Calculator</title>
+    <script>
+        async function calculate() {
+            const formData = {
+                n_thruster: document.getElementById("n_thruster").value,
+                target_efficiency: document.getElementById("target_efficiency").value,
+                thruster_quality: document.getElementById("thruster_quality").value,
+                pump_quality: document.getElementById("pump_quality").value,
+                max_period: document.getElementById("max_period").value,
+            };
+
+            try {
+                const response = await fetch("/calculate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to calculate. Please check your inputs.");
+                }
+
+                const results = await response.json();
+
+                // Update the results section
+                if (results.error) {
+                    document.getElementById("results").innerHTML = `<p style="color: red;">${results.error}</p>`;
+                } else {
+                    document.getElementById("results").innerHTML = `
+                        <h3>Results</h3>
+                        <p>Consumption per Thruster: ${results.consumption_per_thruster.toFixed(2)}</p>
+                        <p>Relative Thrust: ${results.relative_thrust.toFixed(2)}</p>
+                        <p>Total Consumption: ${results.total_consumption.toFixed(2)}</p>
+                        <p>Clock Period: ${results.max_period}</p>
+                        <p>Number of Pumps: ${results.n_pump}</p>
+                        <p>Period: ${results.period}</p>
+                        <p>On Ticks: ${results.on_ticks}</p>
+                        <p>Off Ticks: ${results.off_ticks}</p>
+                        <p>Tick Error: ${results.ticks_error.toFixed(4)}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById("results").innerHTML = `<p style="color: red;">${error.message}</p>`;
+            }
+        }
+
+        // Automatically trigger calculation on input change
+        function setupAutoUpdate() {
+            const inputs = document.querySelectorAll("input");
+            inputs.forEach(input => {
+                input.addEventListener("change", calculate);
+            });
+
+            // Initial calculation
+            calculate();
+        }
+
+        document.addEventListener("DOMContentLoaded", setupAutoUpdate);
+    </script>
+</head>
+<body>
+    <h1>Factorio Thruster Calculator</h1>
+    <form>
+        <label for="n_thruster">Number of Thrusters:</label>
+        <input type="number" id="n_thruster" name="n_thruster" value="5" required><br><br>
+
+        <label for="target_efficiency">Target Efficiency:</label>
+        <input type="number" step="0.01" id="target_efficiency" name="target_efficiency" value="0.7" required><br><br>
+
+        <label for="thruster_quality">Thruster Quality:</label>
+        <input type="number" id="thruster_quality" name="thruster_quality" value="0" required><br><br>
+
+        <label for="pump_quality">Pump Quality:</label>
+        <input type="number" id="pump_quality" name="pump_quality" value="0" required><br><br>
+
+        <label for="max_period">Max Period:</label>
+        <input type="number" id="max_period" name="max_period" value="120" required><br><br>
+    </form>
+
+    <div id="results">
+        <!-- Results will be displayed here -->
+    </div>
+</body>
+</html>
